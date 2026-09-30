@@ -184,7 +184,7 @@ tfoot .name{font-weight:700;color:var(--ink);text-align:center}
         <label for="minN">N 최소 인원</label><input id="minN" type="number" min="0" max="20">
         <label for="maxRun">연속 근무 주의 (일 이상)</label><input id="maxRun" type="number" min="2" max="31">
       </div>
-      <p class="note">근무일수는 D·E·N·MD와 교육(보수·KTAS)을 셉니다. 그 밖에 직접 입력한 글자는 근무에도 Off에도 세지 않습니다. 기준 Off는 그 달의 토·일·공휴일 수이고, 기준대비는 개인 Off에서 기준 Off를 뺀 값입니다.</p>
+      <p class="note">근무일수는 D·E·N·MD와 교육(보수·KTAS), 연차를 셉니다. 그 밖에 직접 입력한 글자는 근무에도 Off에도 세지 않습니다. 기준 Off는 그 달의 토·일·공휴일 수이고, 기준대비는 개인 Off에서 기준 Off를 뺀 값입니다.</p>
     </section>
   </div>
 </div>
@@ -311,7 +311,7 @@ async function findPrevStaff(){
 }
 
 /* ---------- 집계·점검 ---------- */
-function counts(s){var r={work:0,D:0,E:0,N:0,off:0};s.c.forEach(function(v){if(WORK[v])r.work++;if(v==='D'||v==='E'||v==='N')r[v]++;if(v==='off')r.off++});return r}
+function counts(s){var r={work:0,D:0,E:0,N:0,off:0};s.c.forEach(function(v){if(WORK[v]||v==='연차')r.work++;if(v==='D'||v==='E'||v==='N')r[v]++;if(v==='off')r.off++});return r}
 function baseOff(){var n=0;for(var d=1;d<=ndays();d++)if(isRed(d))n++;return n}
 function analyse(){
   var list=[];issueMap={};var n=ndays();
