@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>동신병원 응급실 근무표</title>
+<title>동신병원 응급실 간호사 근무표</title>
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800&display=swap">
 <style>
@@ -354,7 +354,7 @@ function analyse(){
 /* ---------- 그리기 ---------- */
 function renderAll(){
   var n=ndays(),has=!!doc,can=has&&!readOnly;
-  $('title').innerHTML=cur.y+'년 '+cur.m+'월<small>응급실 근무표</small>';
+  $('title').innerHTML=cur.y+'년 '+cur.m+'월<small>동신병원 응급실 간호사 근무표</small>';
   $('autoPanel').hidden=!can;
   if(can){
     $('autoRules').textContent='매일 D '+doc.min.D+'명 · E '+doc.min.E+'명 · N '+doc.min.N+'명(점검 기준 값), 일요일·공휴일에는 MD 1명을 채웁니다. N은 3일까지 연속, N 1개 뒤 off 1일, 2개 이상 뒤 off 2일. D·E·N 근무마다 charge가 1명 이상 들어갑니다. D만 하는 사람은 평일 D, 토·일·공휴일 off로 채웁니다. 전월 말 근무와 이어지는 부분은 계산하지 않습니다.';
@@ -437,7 +437,7 @@ function csv(){
   return '﻿'+out.join('\r\n');
 }
 function printHtml(){
-  var n=ndays(),base=baseOff(),t=cur.y+'년 '+cur.m+'월 응급실 근무표';
+  var n=ndays(),base=baseOff(),t=cur.y+'년 '+cur.m+'월 응급실 간호사 근무표';
   var h='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+t+'</title><style>@page{size:A4 landscape;margin:9mm}body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#111;margin:0}h1{font-size:20pt;text-align:center;margin:0;letter-spacing:.2em}.hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4mm}.st{color:#c8202c;font-weight:bold;font-size:11pt}table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:9pt}th,td{border:.6pt solid #444;text-align:center;height:7.6mm;padding:0}col.nm{width:26mm}col.sm{width:9mm}.r{color:#c8202c}.nm{text-align:center;font-weight:bold;white-space:nowrap;overflow:hidden}td.c{font-weight:bold;font-size:10pt}td.o{font-weight:normal;font-size:8pt}.sg{border-collapse:collapse;width:60mm;font-size:8pt}.sg td{height:11mm}.sg th{height:5mm;font-weight:normal}.ft{text-align:center;margin-top:5mm;letter-spacing:.5em;font-weight:bold;font-size:11pt}</style></head><body>';
   h+='<div class="hd"><span class="st"></span><h1>'+t+'</h1><table class="sg"><tr><th>수간호사</th><th>간호차장</th><th>간호부장</th></tr><tr><td></td><td></td><td></td></tr></table></div>';
   h+='<table><colgroup><col class="sm"><col class="sm"><col class="nm"><col class="sm">';for(var d=0;d<n;d++)h+='<col>';h+='<col class="sm"><col class="sm"><col class="sm"><col class="sm"><col class="sm"></colgroup>';
