@@ -195,7 +195,25 @@ tfoot .name{font-weight:700;color:var(--ink);text-align:center}
 var WD=['일','월','화','수','목','금','토'];
 var WORK={D:1,E:1,N:1,MD:1,'보수':1,KTAS:1};
 var BASE={D:1,E:1,N:1,MD:1,off:1};
-var FIXED={'1-1':1,'3-1':1,'5-5':1,'6-6':1,'8-15':1,'10-3':1,'10-9':1,'12-25':1};
+var LUNAR={2026:{s:[2,17],b:[5,24],c:[9,25]},2027:{s:[2,7],b:[5,13],c:[9,15]},2028:{s:[1,27],b:[5,2],c:[10,3]},2029:{s:[2,13],b:[5,20],c:[9,22]},2030:{s:[2,3],b:[5,9],c:[9,12]}};
+function yearHolidays(y){
+  var list=[],L=LUNAR[y],set={},seen={};
+  function key(x){return (x.getMonth()+1)+'-'+x.getDate()}
+  function add(m,d,k,o){list.push({x:new Date(y,m-1,d+(o||0)),k:k})}
+  add(1,1,0);add(3,1,2);add(5,5,2);add(6,6,0);add(8,15,2);add(10,3,2);add(10,9,2);add(12,25,2);
+  if(L){[-1,0,1].forEach(function(o){add(L.s[0],L.s[1],1,o);add(L.c[0],L.c[1],1,o)});add(L.b[0],L.b[1],2)}
+  list.sort(function(a,b){return a.x-b.x});
+  list.forEach(function(h){set[key(h.x)]=1});
+  list.forEach(function(h){
+    var w=h.x.getDay(),k=key(h.x),need=seen[k]||(h.k===2&&(w===0||w===6))||(h.k===1&&w===0);
+    seen[k]=1;if(!need)return;
+    var x=new Date(h.x);
+    do{x.setDate(x.getDate()+1)}while(x.getDay()===0||x.getDay()===6||set[key(x)]);
+    if(x.getFullYear()===y)set[key(x)]=1;
+  });
+  return set;
+}
+function autoHolidays(){var set=yearHolidays(cur.y),h=[];for(var d=1;d<=ndays();d++)if(set[cur.m+'-'+d])h.push(d);return h}
 var CYCLE=['','D','E','N','off','MD'];
 var KEYMAP={KeyD:'D',KeyE:'E',KeyN:'N',KeyM:'MD',KeyO:'off',KeyF:'off',Delete:'',Backspace:''};
 var $=function(id){return document.getElementById(id)};
@@ -221,6 +239,7 @@ function setState(t){$('state').textContent=t}
 function normalize(d){
   var n=ndays();
   d.holidays=Array.isArray(d.holidays)?d.holidays:[];
+  if(d.hv!==2){autoHolidays().forEach(function(x){if(d.holidays.indexOf(x)<0)d.holidays.push(x)});d.hv=2}
   d.min=Object.assign({D:2,E:2,N:2},d.min||{});
   d.maxRun=d.maxRun||6; d.status=d.status||'draft';
   d.staff=(Array.isArray(d.staff)?d.staff:[]).map(function(s){
@@ -234,8 +253,8 @@ function normalize(d){
 }
 function newId(){return 's'+Math.random().toString(36).slice(2,8)}
 function blankDoc(staff){
-  var h=[];for(var d=1;d<=ndays();d++)if(FIXED[cur.m+'-'+d])h.push(d);
-  return normalize({ym:key(),status:'draft',holidays:h,min:{D:2,E:2,N:2},maxRun:6,
+  var h=autoHolidays();
+  return normalize({ym:key(),status:'draft',holidays:h,hv:2,min:{D:2,E:2,N:2},maxRun:6,
     staff:(staff||[]).map(function(s){return {id:newId(),name:((s.role?s.role+' ':'')+(s.name||'')).trim(),memo:s.memo,roff:s.roff,ann:s.ann,grade:s.grade,donly:s.donly,c:[]}})});
 }
 
