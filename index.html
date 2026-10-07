@@ -346,7 +346,7 @@ function analyse(){
       if(!doc.staff.some(function(s){return s.c[i]===k&&s.grade!=='A'}))noCh[k].push(i+1);
     });
   });
-  if(noMd.length)list.unshift({lv:'err',text:'일요일·공휴일 MD 없음: '+noMd.join(', ')+'일'});
+  if(noMd.length)list.unshift({lv:'err',text:'토·일·공휴일 MD 없음: '+noMd.join(', ')+'일'});
   ['N','E','D'].forEach(function(k){if(noCh[k].length)list.unshift({lv:'err',text:k+' 근무에 charge 없음: '+noCh[k].join(', ')+'일'})});
   return {list:list,day:day};
 }
@@ -357,7 +357,7 @@ function renderAll(){
   $('title').innerHTML=cur.y+'년 '+cur.m+'월<small>동신병원 응급실 간호사 근무표</small>';
   $('autoPanel').hidden=!can;
   if(can){
-    $('autoRules').textContent='매일 D '+doc.min.D+'명 · E '+doc.min.E+'명 · N '+doc.min.N+'명(점검 기준 값), 일요일·공휴일에는 MD 1명을 채웁니다. N은 3일까지 연속, N 1개 뒤 off 1일, 2개 이상 뒤 off 2일. D·E·N 근무마다 charge가 1명 이상 들어갑니다. D만 하는 사람은 평일 D, 토·일·공휴일 off로 채웁니다. 전월 말 근무와 이어지는 부분은 계산하지 않습니다.';
+    $('autoRules').textContent='매일 D '+doc.min.D+'명 · E '+doc.min.E+'명 · N '+doc.min.N+'명(점검 기준 값), 토요일·일요일·공휴일에는 MD 1명을 채웁니다. N은 3일까지 연속, N 1개 뒤 off 1일, 2개 이상 뒤 off 2일. D·E·N 근무마다 charge가 1명 이상 들어갑니다. D만 하는 사람은 평일 D, 토·일·공휴일 off로 채웁니다. 전월 말 근무와 이어지는 부분은 계산하지 않습니다.';
     $('roles').innerHTML=doc.staff.map(function(s,r){return '<div class="role"><b>'+esc(s.name||('연번 '+(r+1)))+'</b><select id="grade-'+s.id+'" data-r="'+r+'" aria-label="charge 여부"><option value="C"'+(s.grade!=='A'?' selected':'')+'>charge</option><option value="A"'+(s.grade==='A'?' selected':'')+'>acting</option></select><label><input type="checkbox" id="donly-'+s.id+'" data-r="'+r+'"'+(s.donly?' checked':'')+'>D만</label></div>'}).join('');
   }
   $('palette').hidden=!can; $('add').hidden=!can; $('clearAll').hidden=!can; $('delMonth').hidden=!can; updateUndo();
@@ -570,7 +570,7 @@ function solveDraft(P){
   return {grid:best,hard:bestHard,short:bestShort,cost:bestCost};
 }
 
-function isMdDay(d){return wd(d)===0||doc.holidays.indexOf(d)>=0}
+function isMdDay(d){return wd(d)===0||wd(d)===6||doc.holidays.indexOf(d)>=0}
 $('auto').onclick=function(){
   if(!doc||readOnly)return;
   if(!doc.staff.length){say('명단을 먼저 입력해 주세요.');return}
