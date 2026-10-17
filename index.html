@@ -182,7 +182,7 @@ tfoot .name{font-weight:700;color:var(--ink);text-align:center}
         <label for="minD">D 최소 인원</label><input id="minD" type="number" min="0" max="20">
         <label for="minE">E 최소 인원</label><input id="minE" type="number" min="0" max="20">
         <label for="minN">N 최소 인원</label><input id="minN" type="number" min="0" max="20">
-        <label for="maxRun">연속 근무 주의 (일 이상)</label><input id="maxRun" type="number" min="2" max="31">
+        <label for="maxRun">연속 근무 한도 (이 일수부터 위반)</label><input id="maxRun" type="number" min="2" max="31">
       </div>
       <p class="note">근무일수는 D·E·N·MD와 교육(보수·KTAS), 연차를 셉니다. 그 밖에 직접 입력한 글자는 근무에도 Off에도 세지 않습니다. 기준 Off는 그 달의 토·일·공휴일 수이고, 기준대비는 개인 Off에서 기준 Off를 뺀 값입니다.</p>
     </section>
@@ -241,7 +241,7 @@ function normalize(d){
   d.holidays=Array.isArray(d.holidays)?d.holidays:[];
   if(d.hv!==2){autoHolidays().forEach(function(x){if(d.holidays.indexOf(x)<0)d.holidays.push(x)});d.hv=2}
   d.min=Object.assign({D:2,E:2,N:2},d.min||{});
-  d.maxRun=d.maxRun||6; d.status=d.status||'draft';
+  d.maxRun=d.maxRun||5; if(d.hv===2){if(d.maxRun===6)d.maxRun=5;d.hv=3} d.status=d.status||'draft';
   d.staff=(Array.isArray(d.staff)?d.staff:[]).map(function(s){
     var c=Array.isArray(s.c)?s.c.slice(0,n):[];
     while(c.length<n)c.push('');
@@ -254,7 +254,7 @@ function normalize(d){
 function newId(){return 's'+Math.random().toString(36).slice(2,8)}
 function blankDoc(staff){
   var h=autoHolidays();
-  return normalize({ym:key(),status:'draft',holidays:h,hv:2,min:{D:2,E:2,N:2},maxRun:6,
+  return normalize({ym:key(),status:'draft',holidays:h,hv:3,min:{D:2,E:2,N:2},maxRun:5,
     staff:(staff||[]).map(function(s){return {id:newId(),name:((s.role?s.role+' ':'')+(s.name||'')).trim(),memo:s.memo,roff:s.roff,ann:s.ann,grade:s.grade,donly:s.donly,c:[]}})});
 }
 
@@ -344,7 +344,7 @@ function analyse(){
       runN=v==='N'?runN+1:0; if(runN===4)mark(r,d,'warn',nm+' '+(d+1)+'일: N 4일 연속');
       if(p==='N'&&v!=='N'&&blk>=2&&!WORK[v]&&d+1<n&&WORK[s.c[d+1]])mark(r,d+1,'warn',nm+' '+(d+2)+'일: N '+blk+'개 뒤 off 1일');
       blk=runN;
-      runW=WORK[v]?runW+1:0; if(runW===doc.maxRun)mark(r,d,'warn',nm+' '+(d+1)+'일: 근무 '+doc.maxRun+'일 연속');
+      runW=WORK[v]?runW+1:0; if(runW===doc.maxRun&&!s.donly)mark(r,d,'err',nm+' '+(d+1)+'일: 근무 '+doc.maxRun+'일 연속 (off 없음)');
     }
   });
   var day=[];
@@ -376,7 +376,7 @@ function renderAll(){
   $('title').innerHTML=cur.y+'년 '+cur.m+'월<small>동신병원 응급실 간호사 근무표</small>';
   $('autoPanel').hidden=!can;
   if(can){
-    $('autoRules').textContent='매일 D '+doc.min.D+'명 · E '+doc.min.E+'명 · N '+doc.min.N+'명(점검 기준 값), 토요일·일요일·공휴일에는 MD 1명을 채웁니다. N은 3일까지 연속, N 1개 뒤 off 1일, 2개 이상 뒤 off 2일. D·E·N 근무마다 charge가 1명 이상 들어갑니다. D만 하는 사람은 평일 D, 토·일·공휴일 off로 채웁니다. 전월 말 근무와 이어지는 부분은 계산하지 않습니다.';
+    $('autoRules').textContent='매일 D '+doc.min.D+'명 · E '+doc.min.E+'명 · N '+doc.min.N+'명(점검 기준 값), 토요일·일요일·공휴일에는 MD 1명을 채웁니다. N은 3일까지 연속, N 1개 뒤 off 1일, 2개 이상 뒤 off 2일. 근무는 '+(doc.maxRun-1)+'일 연속까지이고 그 뒤에는 반드시 off가 옵니다(D만 하는 사람은 평일 5일 근무라 예외). D·E·N 근무마다 charge가 1명 이상 들어갑니다. D만 하는 사람은 평일 D, 토·일·공휴일 off로 채웁니다. 전월 말 근무와 이어지는 부분은 계산하지 않습니다.';
     $('roles').innerHTML=doc.staff.map(function(s,r){return '<div class="role"><b>'+esc(s.name||('연번 '+(r+1)))+'</b><select id="grade-'+s.id+'" data-r="'+r+'" aria-label="charge 여부"><option value="C"'+(s.grade!=='A'?' selected':'')+'>charge</option><option value="A"'+(s.grade==='A'?' selected':'')+'>acting</option></select><label><input type="checkbox" id="donly-'+s.id+'" data-r="'+r+'"'+(s.donly?' checked':'')+'>D만</label></div>'}).join('');
   }
   $('palette').hidden=!can; $('add').hidden=!can; $('clearAll').hidden=!can; $('delMonth').hidden=!can; updateUndo();
@@ -541,7 +541,7 @@ function solveDraft(P){
       }
       k=v==='N'?k+1:0;
       if(p==='E'&&v==='D')c+=M;
-      runW=w?runW+1:0;if(runW>P.maxW)c+=M;
+      runW=w?runW+1:0;if(runW>P.maxW){c+=H;hardAcc++}
       if(d>0&&d<n-1){
         var pw=W[row[d-1]]?1:0,nw=W[row[d+1]]?1:0;
         if(!w&&pw&&nw&&row[d-1]!=='N')c+=6;
