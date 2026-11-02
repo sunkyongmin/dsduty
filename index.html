@@ -92,11 +92,11 @@ td.redcol{background:var(--red-wash)}
 thead .name{z-index:3;text-align:center}
 td input{border:0;background:transparent;height:30px;padding:0 3px;border-radius:2px}
 td input:hover:not(:disabled){background:var(--stamp-wash)}
-.in-name{width:var(--namew,5em);font-weight:700;text-align:center} .in-memo{width:3.8em;color:var(--ink-soft);text-align:center} .in-ann{width:3em;text-align:center} .in-note{width:11em;text-align:left;padding-inline:6px}
+.in-name{width:var(--namew,5em);font-weight:700;text-align:center} .in-memo{width:3.8em;color:var(--ink-soft);text-align:center} .in-ann{width:2.2em;text-align:center;padding:0 1px} .in-note{width:11em;text-align:left;padding-inline:6px}
 td.num,th.num{min-width:34px;padding-inline:4px} td.idx{color:var(--ink-soft);font-size:11px;min-width:22px}
-td.c{min-width:30px;cursor:pointer;font-weight:700;font-size:14px;position:relative;user-select:none}
+td.c{min-width:30px;padding-inline:3px;white-space:nowrap;cursor:pointer;font-weight:700;font-size:14px;position:relative;user-select:none}
 td.c.v-off{color:var(--pen-red);font-weight:500;font-size:12px}
-td.c.v-leave{color:var(--pen-red);font-size:9px;letter-spacing:-.04em;line-height:1.1;word-break:break-all;padding-inline:1px}
+td.c.v-leave{color:var(--pen-red);font-size:11px;font-weight:600}
 td.c.v-N{background:var(--night)} td.c.v-E{background:var(--eve)}
 td.c.v-MD{font-size:11px;box-shadow:inset 0 0 0 1px var(--line)}
 td.c.warn{background:var(--warn-wash)} td.c.err{background:var(--err-wash)}
@@ -191,7 +191,7 @@ tfoot .name{font-weight:700;color:var(--ink);text-align:center}
         <label for="minN">N 최소 인원</label><input id="minN" type="number" min="0" max="20">
         <label for="maxRun">연속 근무 한도 (이 일수부터 위반)</label><input id="maxRun" type="number" min="2" max="31">
       </div>
-      <p class="note">근무일수는 D·E·N·MD와 교육(보수·KTAS), 연차를 1일, 반차가 들어간 글자(예: off/반차)를 0.5일로 셉니다. 그 밖에 직접 입력한 글자는 근무에도 Off에도 세지 않습니다. 기준 Off는 그 달의 토·일·공휴일 수이고, 기준대비는 개인 Off에서 기준 Off를 뺀 값입니다.</p>
+      <p class="note">근무일수는 D·E·N·MD와 교육(보수·KTAS), 연차를 1일, 반이 들어간 글자(예: 반, off/반)를 0.5일로 셉니다. 그 밖에 직접 입력한 글자는 근무에도 Off에도 세지 않습니다. 기준 Off는 그 달의 토·일·공휴일 수이고, 기준대비는 개인 Off에서 기준 Off를 뺀 값입니다.</p>
     </section>
   </div>
 </div>
@@ -251,7 +251,7 @@ function normalize(d){
   d.min=Object.assign({D:2,E:2,N:2},d.min||{});
   d.maxRun=d.maxRun||5; if(d.hv===2){if(d.maxRun===6)d.maxRun=5;d.hv=3} d.status=d.status||'draft';
   d.staff=(Array.isArray(d.staff)?d.staff:[]).map(function(s){
-    var c=(Array.isArray(s.c)?s.c.slice(0,n):[]).map(function(v){return v==='반'?'반차':/\/반$/.test(v)?v+'차':v});
+    var c=(Array.isArray(s.c)?s.c.slice(0,n):[]).map(function(v){return typeof v==='string'?v.replace(/반차/g,'반'):v});
     while(c.length<n)c.push('');
     var g=Array.isArray(s.g)?s.g.slice(0,n):[];while(g.length<n)g.push(0);
     var nm=((s.role?s.role+' ':'')+(s.name||'')).trim();
@@ -338,7 +338,7 @@ async function findPrevStaff(){
 }
 
 /* ---------- 집계·점검 ---------- */
-function counts(s){var r={work:0,D:0,E:0,N:0,off:0};s.c.forEach(function(v){if(WORK[v]||v==='연차')r.work++;else if(/반차/.test(v))r.work+=0.5;if(v==='D'||v==='E'||v==='N')r[v]++;if(v==='off')r.off++});return r}
+function counts(s){var r={work:0,D:0,E:0,N:0,off:0};s.c.forEach(function(v){if(WORK[v]||v==='연차')r.work++;else if(/반/.test(v))r.work+=0.5;if(v==='D'||v==='E'||v==='N')r[v]++;if(v==='off')r.off++});return r}
 function baseOff(){var n=0;for(var d=1;d<=ndays();d++)if(isRed(d))n++;return n}
 function analyse(){
   var list=[];issueMap={};var n=ndays();
@@ -399,7 +399,7 @@ function renderAll(){
   
   ['minD','minE','minN','maxRun'].forEach(function(id){var el=$(id);el.disabled=!can;if(document.activeElement!==el)el.value=has?(id==='maxRun'?doc.maxRun:doc.min[id.slice(3)]):''});
 
-  var h1='<tr><th rowspan="2" class="idx">연번</th><th rowspan="2" class="name">이름</th><th rowspan="2" class="num">입사일</th><th rowspan="2" class="num">근무</th>';
+  var h1='<tr><th rowspan="2" class="idx">연번</th><th rowspan="2" class="name">이름</th><th rowspan="2" class="num">입사일</th><th rowspan="2" class="num">근무<br>일수</th>';
   var h2='<tr>';
   for(var d=1;d<=n;d++){
     var red=has?isRedDisp(d):wd(d)===0,cls='day'+(red?' red':'');
@@ -484,22 +484,27 @@ function csv(){
   return '﻿'+out.join('\r\n');
 }
 function printHtml(){
-  var n=ndays(),base=baseOff(),t=cur.y+'년 '+cur.m+'월 응급실 간호사 근무표',nmw=Math.max(22,4+doc.staff.reduce(function(m,s){var w=0;for(var ch of (s.name||''))w+=/[\u3131-\uD79D]/.test(ch)?3.4:/\s/.test(ch)?1.2:2.3;return Math.max(m,w)},0));
-  var h='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+t+'</title><style>@page{size:A4 landscape;margin:9mm}body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#111;margin:0}h1{font-size:20pt;text-align:center;margin:0;letter-spacing:.2em}.hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4mm}.st{color:#c8202c;font-weight:bold;font-size:11pt}table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:9pt}th,td{border:.6pt solid #444;text-align:center;height:7.6mm;padding:0}col.nm{width:'+Math.ceil(nmw)+'mm}col.sm{width:9mm}col.nt{width:32mm}.r{color:#c8202c}.nm{text-align:center;font-weight:bold;white-space:nowrap;overflow:hidden}td.c{font-weight:bold;font-size:10pt}td.o{font-weight:normal;font-size:8pt}.sg{border-collapse:collapse;width:60mm;font-size:8pt}.sg td{height:11mm}.sg th{height:5mm;font-weight:normal}.ft{text-align:center;margin-top:5mm;letter-spacing:.5em;font-weight:bold;font-size:11pt}</style></head><body>';
+  var n=ndays(),base=baseOff(),t=cur.y+'년 '+cur.m+'월 응급실 간호사 근무표';
+  var h='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+t+'</title><style>@page{size:A4 landscape;margin:9mm}body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#111;margin:0}h1{font-size:20pt;text-align:center;margin:0;letter-spacing:.2em}.hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4mm}.st{color:#c8202c;font-weight:bold;font-size:11pt}body{width:279mm}table.t{border-collapse:collapse;width:auto;table-layout:auto;font-size:9pt}table.t th,table.t td{border:.6pt solid #444;text-align:center;height:7.6mm;padding:0 .7mm;white-space:nowrap}table.t td.c,table.t th.d{min-width:4.6mm}table.t .nt{min-width:22mm;white-space:normal;text-align:left;padding:0 1.5mm}.r{color:#c8202c}.nm{text-align:center;font-weight:bold;white-space:nowrap;overflow:hidden}td.c{font-weight:bold;font-size:1.12em}td.o{font-weight:normal;font-size:.9em}.sg{border-collapse:collapse;width:60mm;font-size:8pt}.sg td{height:11mm}.sg th{height:5mm;font-weight:normal}.ft{text-align:center;margin-top:5mm;letter-spacing:.5em;font-weight:bold;font-size:11pt}</style></head><body>';
   h+='<div class="hd"><span class="st"></span><h1>'+t+'</h1><table class="sg"><tr><th>수간호사</th><th>간호차장</th><th>간호부장</th></tr><tr><td></td><td></td><td></td></tr></table></div>';
-  h+='<table><colgroup><col class="sm"><col class="sm"><col class="nm"><col class="sm">';for(var d=0;d<n;d++)h+='<col>';h+='<col class="sm"><col class="sm"><col class="sm"><col class="sm"><col class="nt"></colgroup>';
-  h+='<tr><th rowspan="2">입사일</th><th rowspan="2">연번</th><th rowspan="2">이름</th><th rowspan="2">근무</th>';
-  for(d=1;d<=n;d++)h+='<th'+(isRedDisp(d)?' class="r"':'')+'>'+d+'</th>';
-  h+='<th rowspan="2">N</th><th rowspan="2">Off<br>'+base+'</th><th rowspan="2">남은<br>off</th><th rowspan="2">남은<br>연차</th><th rowspan="2">비고</th></tr><tr>';
-  for(d=1;d<=n;d++)h+='<th'+(isRedDisp(d)?' class="r"':'')+'>'+WD[wd(d)]+'</th>';
+  h+='<table class="t">';var d;
+  h+='<tr><th rowspan="2">입사<br>일</th><th rowspan="2">연번</th><th rowspan="2">이름</th><th rowspan="2">근무<br>일수</th>';
+  for(d=1;d<=n;d++)h+='<th class="d'+(isRedDisp(d)?' r':'')+'">'+d+'</th>';
+  h+='<th rowspan="2">N</th><th rowspan="2">Off<br>'+base+'</th><th rowspan="2">남은<br>off</th><th rowspan="2">남은<br>연차</th><th rowspan="2" class="nt" style="text-align:center">비고</th></tr><tr>';
+  for(d=1;d<=n;d++)h+='<th class="d'+(isRedDisp(d)?' r':'')+'">'+WD[wd(d)]+'</th>';
   h+='</tr>';
   doc.staff.forEach(function(s,i){
     var c=counts(s);
     h+='<tr><td>'+esc(s.memo)+'</td><td>'+(i+1)+'</td><td class="nm">'+esc(label(s))+'</td><td>'+c.work+'</td>';
     s.c.forEach(function(v){var red=v&&(v==='off'||!BASE[v]);h+='<td class="c'+(red?' r o':'')+'">'+esc(v)+'</td>'});
-    h+='<td>'+c.N+'</td><td>'+c.off+'</td><td>'+esc(s.roff)+'</td><td>'+esc(s.ann)+'</td><td>'+esc(s.note)+'</td></tr>';
+    h+='<td>'+c.N+'</td><td>'+c.off+'</td><td>'+esc(s.roff)+'</td><td>'+esc(s.ann)+'</td><td class="nt">'+esc(s.note)+'</td></tr>';
   });
-  return h+'</table><div class="ft">동신의료재단 동신병원</div></body></html>';
+  h+='</table><div class="ft">동신의료재단 동신병원</div>';
+  h+='<scr'+'ipt>(function(){var t=document.querySelector("table.t"),nt=t.querySelector("th.nt"),page=document.body.getBoundingClientRect().width;'
+    +'var extra=page-t.getBoundingClientRect().width;'
+    +'if(extra>0){nt.style.width=(nt.getBoundingClientRect().width+extra-2)+"px"}'
+    +'else{var f=9;while(extra<0&&f>6.5){f-=0.25;t.style.fontSize=f+"pt";extra=page-t.getBoundingClientRect().width}}})()</scr'+'ipt>';
+  return h+'</body></html>';
 }
 async function saveFile(name,data){
   try{await dl.save({filename:name,data:data});say('')}
