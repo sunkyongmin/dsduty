@@ -416,7 +416,6 @@ function renderAll(){
       (readOnly?cur.m+'월 근무표가 아직 없습니다.':cur.m+'월 근무표가 아직 없습니다. 지난 근무표의 명단을 가져오거나 빈 근무표로 시작하세요.<div class="acts"><button class="primary" id="mkPrev">지난 명단으로 만들기</button><button id="mkBlank">빈 근무표 만들기</button>'+(undoStack.length?'<button id="mkUndo">삭제한 근무표 되살리기</button>':'')+'</div>'))+'</td></tr>';
     return;
   }
-  var maxNm=doc.staff.reduce(function(m,s){return Math.max(m,(s.name||'').length)},3);$('grid').style.setProperty('--namew',(maxNm+1)+'em');
   var anyGen=doc.staff.some(function(s){return s.g.indexOf(1)>=0});
   var a=analyse(),base=baseOff(),dis=can?'':' disabled',rows='';
   doc.staff.forEach(function(s,r){
@@ -434,6 +433,7 @@ function renderAll(){
   });
   if(!doc.staff.length)rows='<tr class="blank"><td colspan="'+span+'">명단이 비어 있습니다. 아래 간호사 추가를 눌러 첫 줄을 만드세요.</td></tr>';
   $('tbody').innerHTML=rows;
+  fitNames();
 
   var foot='';
   ['D','E','N','MD'].forEach(function(k){
@@ -445,6 +445,19 @@ function renderAll(){
   $('facts').innerHTML='<span>인원 <b>'+doc.staff.length+'명</b></span><span>기준 Off (토·일·공휴일) <b>'+base+'일</b></span><span>점검 <b>'+a.list.length+'건</b></span>';
   $('issueCount').textContent=a.list.length?a.list.length+'건':'';
   $('issues').innerHTML=a.list.length?a.list.map(function(i){return '<li><span class="tag '+(i.lv==='err'?'e':'w')+'">'+(i.lv==='err'?'확인':'주의')+'</span><span>'+esc(i.text)+'</span></li>'}).join(''):'<li>기준에 걸리는 근무가 없습니다.</li>';
+}
+var measureCtx=null;
+function fitNames(){
+  var els=$('tbody').querySelectorAll('.in-name');if(!els.length)return;
+  try{
+    measureCtx=measureCtx||document.createElement('canvas').getContext('2d');
+    var cs=getComputedStyle(els[0]);measureCtx.font=cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily;
+    var w=measureCtx.measureText('이름이름').width;
+    els.forEach(function(el){w=Math.max(w,measureCtx.measureText(el.value||'').width)});
+    $('grid').style.setProperty('--namew',Math.ceil(w+16)+'px');
+  }catch(e){
+    var m=0;els.forEach(function(el){m=Math.max(m,(el.value||'').length)});$('grid').style.setProperty('--namew',(m+2)+'em');
+  }
 }
 function select(r,d,scroll){
   sel={r:r,d:d};
@@ -471,8 +484,8 @@ function csv(){
   return '﻿'+out.join('\r\n');
 }
 function printHtml(){
-  var n=ndays(),base=baseOff(),t=cur.y+'년 '+cur.m+'월 응급실 간호사 근무표';
-  var h='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+t+'</title><style>@page{size:A4 landscape;margin:9mm}body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#111;margin:0}h1{font-size:20pt;text-align:center;margin:0;letter-spacing:.2em}.hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4mm}.st{color:#c8202c;font-weight:bold;font-size:11pt}table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:9pt}th,td{border:.6pt solid #444;text-align:center;height:7.6mm;padding:0}col.nm{width:22mm}col.sm{width:9mm}col.nt{width:32mm}.r{color:#c8202c}.nm{text-align:center;font-weight:bold;white-space:nowrap;overflow:hidden}td.c{font-weight:bold;font-size:10pt}td.o{font-weight:normal;font-size:8pt}.sg{border-collapse:collapse;width:60mm;font-size:8pt}.sg td{height:11mm}.sg th{height:5mm;font-weight:normal}.ft{text-align:center;margin-top:5mm;letter-spacing:.5em;font-weight:bold;font-size:11pt}</style></head><body>';
+  var n=ndays(),base=baseOff(),t=cur.y+'년 '+cur.m+'월 응급실 간호사 근무표',nmw=Math.max(22,4+doc.staff.reduce(function(m,s){var w=0;for(var ch of (s.name||''))w+=/[\u3131-\uD79D]/.test(ch)?3.4:/\s/.test(ch)?1.2:2.3;return Math.max(m,w)},0));
+  var h='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+t+'</title><style>@page{size:A4 landscape;margin:9mm}body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#111;margin:0}h1{font-size:20pt;text-align:center;margin:0;letter-spacing:.2em}.hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4mm}.st{color:#c8202c;font-weight:bold;font-size:11pt}table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:9pt}th,td{border:.6pt solid #444;text-align:center;height:7.6mm;padding:0}col.nm{width:'+Math.ceil(nmw)+'mm}col.sm{width:9mm}col.nt{width:32mm}.r{color:#c8202c}.nm{text-align:center;font-weight:bold;white-space:nowrap;overflow:hidden}td.c{font-weight:bold;font-size:10pt}td.o{font-weight:normal;font-size:8pt}.sg{border-collapse:collapse;width:60mm;font-size:8pt}.sg td{height:11mm}.sg th{height:5mm;font-weight:normal}.ft{text-align:center;margin-top:5mm;letter-spacing:.5em;font-weight:bold;font-size:11pt}</style></head><body>';
   h+='<div class="hd"><span class="st"></span><h1>'+t+'</h1><table class="sg"><tr><th>수간호사</th><th>간호차장</th><th>간호부장</th></tr><tr><td></td><td></td><td></td></tr></table></div>';
   h+='<table><colgroup><col class="sm"><col class="sm"><col class="nm"><col class="sm">';for(var d=0;d<n;d++)h+='<col>';h+='<col class="sm"><col class="sm"><col class="sm"><col class="sm"><col class="nt"></colgroup>';
   h+='<tr><th rowspan="2">입사일</th><th rowspan="2">연번</th><th rowspan="2">이름</th><th rowspan="2">근무</th>';
@@ -686,7 +699,7 @@ $('grid').addEventListener('click',async function(e){
 });
 $('grid').addEventListener('input',function(e){
   var el=e.target;if(!el.dataset.f||!doc||readOnly)return;
-  doc.staff[+el.dataset.r][el.dataset.f]=el.value;touch('t'+el.dataset.r+el.dataset.f);
+  doc.staff[+el.dataset.r][el.dataset.f]=el.value;if(el.dataset.f==='name')fitNames();touch('t'+el.dataset.r+el.dataset.f);
 });
 ['minD','minE','minN','maxRun'].forEach(function(id){$(id).addEventListener('change',function(){
   if(!doc||readOnly)return;var v=parseInt(this.value,10);if(isNaN(v)||v<0)return;
