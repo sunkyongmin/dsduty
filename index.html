@@ -191,7 +191,7 @@ tfoot .name{font-weight:700;color:var(--ink);text-align:center}
         <label for="minN">N 최소 인원</label><input id="minN" type="number" min="0" max="20">
         <label for="maxRun">연속 근무 한도 (이 일수부터 위반)</label><input id="maxRun" type="number" min="2" max="31">
       </div>
-      <p class="note">근무일수는 D·E·N·MD, 보수교육, 연차를 1일, 반이 들어간 글자(예: 반, off/반)를 0.5일로 셉니다. KTAS 교육일과 그 밖에 직접 입력한 글자는 근무에도 Off에도 세지 않습니다. 기준 Off는 그 달의 토·일·공휴일 수입니다.</p>
+      <p class="note">근무일수는 D·E·N·MD, 보수교육, KTAS 교육, 연차를 1일, 반이 들어간 글자(예: 반, off/반)를 0.5일로 셉니다. 그 밖에 직접 입력한 글자는 근무에도 Off에도 세지 않습니다. KTAS 교육일은 근무일수에는 넣지만, 연속 근무·주당 off 점검과 자동 초안에서는 off처럼 쉬는 날로 봅니다. 기준 Off는 그 달의 토·일·공휴일 수입니다.</p>
     </section>
   </div>
 </div>
@@ -200,7 +200,7 @@ tfoot .name{font-weight:700;color:var(--ink);text-align:center}
 (function(){
 "use strict";
 var WD=['일','월','화','수','목','금','토'];
-var WORK_BASE={D:1,E:1,N:1,MD:1,'보수':1,KTAS:1};
+var WORK_BASE={D:1,E:1,N:1,MD:1,'보수':1};
 var WORK=new Proxy(WORK_BASE,{get:function(t,k){return typeof k==='string'?(t[k]||t[k.trim().toUpperCase()]):t[k]}});
 var BASE={D:1,E:1,N:1,MD:1,off:1};
 var LUNAR={2026:{s:[2,17],b:[5,24],c:[9,25]},2027:{s:[2,7],b:[5,13],c:[9,15]},2028:{s:[1,27],b:[5,2],c:[10,3]},2029:{s:[2,13],b:[5,20],c:[9,22]},2030:{s:[2,3],b:[5,9],c:[9,12]}};
@@ -339,7 +339,7 @@ async function findPrevStaff(){
 }
 
 /* ---------- 집계·점검 ---------- */
-function counts(s){if(!(s.name||'').trim())return {work:'',D:'',E:'',N:'',off:''};var r={work:0,D:0,E:0,N:0,off:0};s.c.forEach(function(v){if(/^\s*ktas\s*$/i.test(v)){}else if(WORK[v]||v==='연차')r.work++;else if(/반/.test(v))r.work+=0.5;if(v==='D'||v==='E'||v==='N')r[v]++;if(v==='off')r.off++});return r}
+function counts(s){if(!(s.name||'').trim())return {work:'',D:'',E:'',N:'',off:''};var r={work:0,D:0,E:0,N:0,off:0};s.c.forEach(function(v){if(WORK[v]||v==='연차'||/^\s*ktas\s*$/i.test(v))r.work++;else if(/반/.test(v))r.work+=0.5;if(v==='D'||v==='E'||v==='N')r[v]++;if(v==='off')r.off++});return r}
 function baseOff(){var n=0;for(var d=1;d<=ndays();d++)if(isRed(d))n++;return n}
 function analyse(){
   var list=[];issueMap={};var n=ndays();
