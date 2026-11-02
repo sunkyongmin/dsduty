@@ -200,7 +200,8 @@ tfoot .name{font-weight:700;color:var(--ink);text-align:center}
 (function(){
 "use strict";
 var WD=['일','월','화','수','목','금','토'];
-var WORK={D:1,E:1,N:1,MD:1,'보수':1,KTAS:1};
+var WORK_BASE={D:1,E:1,N:1,MD:1,'보수':1,KTAS:1};
+var WORK=new Proxy(WORK_BASE,{get:function(t,k){return typeof k==='string'?(t[k]||t[k.trim().toUpperCase()]):t[k]}});
 var BASE={D:1,E:1,N:1,MD:1,off:1};
 var LUNAR={2026:{s:[2,17],b:[5,24],c:[9,25]},2027:{s:[2,7],b:[5,13],c:[9,15]},2028:{s:[1,27],b:[5,2],c:[10,3]},2029:{s:[2,13],b:[5,20],c:[9,22]},2030:{s:[2,3],b:[5,9],c:[9,12]}};
 function yearHolidays(y){
