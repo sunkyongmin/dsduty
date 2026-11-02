@@ -339,7 +339,7 @@ async function findPrevStaff(){
 }
 
 /* ---------- 집계·점검 ---------- */
-function counts(s){var r={work:0,D:0,E:0,N:0,off:0};s.c.forEach(function(v){if(WORK[v]||v==='연차')r.work++;else if(/반/.test(v))r.work+=0.5;if(v==='D'||v==='E'||v==='N')r[v]++;if(v==='off')r.off++});return r}
+function counts(s){if(!(s.name||'').trim())return {work:'',D:'',E:'',N:'',off:''};var r={work:0,D:0,E:0,N:0,off:0};s.c.forEach(function(v){if(WORK[v]||v==='연차')r.work++;else if(/반/.test(v))r.work+=0.5;if(v==='D'||v==='E'||v==='N')r[v]++;if(v==='off')r.off++});return r}
 function baseOff(){var n=0;for(var d=1;d<=ndays();d++)if(isRed(d))n++;return n}
 function analyse(){
   var list=[];issueMap={};var n=ndays();
