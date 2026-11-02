@@ -92,7 +92,7 @@ td.redcol{background:var(--red-wash)}
 thead .name{z-index:3;text-align:center}
 td input{border:0;background:transparent;height:30px;padding:0 3px;border-radius:2px}
 td input:hover:not(:disabled){background:var(--stamp-wash)}
-.in-name{width:var(--namew,5em);font-weight:700;text-align:center} .in-memo{width:3.8em;color:var(--ink-soft);text-align:center} .in-ann{width:3em;text-align:center} .in-note{width:5em;text-align:center}
+.in-name{width:var(--namew,5em);font-weight:700;text-align:center} .in-memo{width:3.8em;color:var(--ink-soft);text-align:center} .in-ann{width:3em;text-align:center} .in-note{width:11em;text-align:left;padding-inline:6px}
 td.num,th.num{min-width:34px;padding-inline:4px} td.idx{color:var(--ink-soft);font-size:11px;min-width:22px}
 td.c{min-width:30px;cursor:pointer;font-weight:700;font-size:14px;position:relative;user-select:none}
 td.c.v-off{color:var(--pen-red);font-weight:500;font-size:12px}
@@ -237,6 +237,7 @@ function wd(d){return new Date(cur.y,cur.m-1,d).getDay()}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function isRed(d){var w=wd(d);return w===0||w===6||(doc&&doc.holidays.indexOf(d)>=0)}
+function isRedDisp(d){return wd(d)===0||!!(doc&&doc.holidays.indexOf(d)>=0)}
 function lsGet(k){try{var v=localStorage.getItem('duty:'+k);return v?JSON.parse(v):null}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem('duty:'+k,JSON.stringify(v))}catch(e){}}
 function savedText(){var t=new Date(),hm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');return (db?'저장됨 ':'이 브라우저에만 저장됨 ')+hm}
@@ -401,7 +402,7 @@ function renderAll(){
   var h1='<tr><th rowspan="2" class="idx">연번</th><th rowspan="2" class="name">이름</th><th rowspan="2" class="num">입사일</th><th rowspan="2" class="num">근무</th>';
   var h2='<tr>';
   for(var d=1;d<=n;d++){
-    var red=has?isRed(d):(wd(d)===0||wd(d)===6),cls='day'+(red?' red':'');
+    var red=has?isRedDisp(d):wd(d)===0,cls='day'+(red?' red':'');
     h1+='<th class="'+cls+'" data-hol="'+d+'">'+d+'</th>';
     h2+='<th class="'+cls+'" data-hol="'+d+'">'+WD[wd(d)]+'</th>';
   }
@@ -424,7 +425,7 @@ function renderAll(){
       '<td><input class="in-memo" id="memo-'+s.id+'" data-f="memo" data-r="'+r+'" value="'+esc(s.memo)+'" aria-label="입사일"'+dis+'></td><td class="num">'+c.work+'</td>';
     for(var d=0;d<n;d++){
       var v=s.c[d],k=!v?'':BASE[v]?v:'leave';
-      var cls='c'+(anyGen&&v&&!s.g[d]?' fx':'')+(k?' v-'+k:'')+(isRed(d+1)&&!k?' redcol':'')+(issueMap[r+'-'+d]?' '+issueMap[r+'-'+d]:'')+(sel&&sel.r===r&&sel.d===d?' sel':'');
+      var cls='c'+(anyGen&&v&&!s.g[d]?' fx':'')+(k?' v-'+k:'')+(isRedDisp(d+1)&&!k?' redcol':'')+(issueMap[r+'-'+d]?' '+issueMap[r+'-'+d]:'')+(sel&&sel.r===r&&sel.d===d?' sel':'');
       rows+='<td class="'+cls+'" data-r="'+r+'" data-d="'+d+'" tabindex="-1">'+esc(v)+'</td>';
     }
     rows+='<td class="num">'+c.D+'</td><td class="num">'+c.E+'</td><td class="num">'+c.N+'</td><td class="num">'+c.off+'</td>'+
@@ -471,13 +472,13 @@ function csv(){
 }
 function printHtml(){
   var n=ndays(),base=baseOff(),t=cur.y+'년 '+cur.m+'월 응급실 간호사 근무표';
-  var h='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+t+'</title><style>@page{size:A4 landscape;margin:9mm}body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#111;margin:0}h1{font-size:20pt;text-align:center;margin:0;letter-spacing:.2em}.hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4mm}.st{color:#c8202c;font-weight:bold;font-size:11pt}table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:9pt}th,td{border:.6pt solid #444;text-align:center;height:7.6mm;padding:0}col.nm{width:22mm}col.sm{width:9mm}col.nt{width:16mm}.r{color:#c8202c}.nm{text-align:center;font-weight:bold;white-space:nowrap;overflow:hidden}td.c{font-weight:bold;font-size:10pt}td.o{font-weight:normal;font-size:8pt}.sg{border-collapse:collapse;width:60mm;font-size:8pt}.sg td{height:11mm}.sg th{height:5mm;font-weight:normal}.ft{text-align:center;margin-top:5mm;letter-spacing:.5em;font-weight:bold;font-size:11pt}</style></head><body>';
+  var h='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+t+'</title><style>@page{size:A4 landscape;margin:9mm}body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#111;margin:0}h1{font-size:20pt;text-align:center;margin:0;letter-spacing:.2em}.hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4mm}.st{color:#c8202c;font-weight:bold;font-size:11pt}table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:9pt}th,td{border:.6pt solid #444;text-align:center;height:7.6mm;padding:0}col.nm{width:22mm}col.sm{width:9mm}col.nt{width:32mm}.r{color:#c8202c}.nm{text-align:center;font-weight:bold;white-space:nowrap;overflow:hidden}td.c{font-weight:bold;font-size:10pt}td.o{font-weight:normal;font-size:8pt}.sg{border-collapse:collapse;width:60mm;font-size:8pt}.sg td{height:11mm}.sg th{height:5mm;font-weight:normal}.ft{text-align:center;margin-top:5mm;letter-spacing:.5em;font-weight:bold;font-size:11pt}</style></head><body>';
   h+='<div class="hd"><span class="st"></span><h1>'+t+'</h1><table class="sg"><tr><th>수간호사</th><th>간호차장</th><th>간호부장</th></tr><tr><td></td><td></td><td></td></tr></table></div>';
   h+='<table><colgroup><col class="sm"><col class="sm"><col class="nm"><col class="sm">';for(var d=0;d<n;d++)h+='<col>';h+='<col class="sm"><col class="sm"><col class="sm"><col class="sm"><col class="nt"></colgroup>';
   h+='<tr><th rowspan="2">입사일</th><th rowspan="2">연번</th><th rowspan="2">이름</th><th rowspan="2">근무</th>';
-  for(d=1;d<=n;d++)h+='<th'+(isRed(d)?' class="r"':'')+'>'+d+'</th>';
+  for(d=1;d<=n;d++)h+='<th'+(isRedDisp(d)?' class="r"':'')+'>'+d+'</th>';
   h+='<th rowspan="2">N</th><th rowspan="2">Off<br>'+base+'</th><th rowspan="2">남은<br>off</th><th rowspan="2">남은<br>연차</th><th rowspan="2">비고</th></tr><tr>';
-  for(d=1;d<=n;d++)h+='<th'+(isRed(d)?' class="r"':'')+'>'+WD[wd(d)]+'</th>';
+  for(d=1;d<=n;d++)h+='<th'+(isRedDisp(d)?' class="r"':'')+'>'+WD[wd(d)]+'</th>';
   h+='</tr>';
   doc.staff.forEach(function(s,i){
     var c=counts(s);
