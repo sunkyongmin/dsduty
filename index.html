@@ -352,6 +352,7 @@ function analyse(){
       if(p==='E'&&v==='D')mark(r,d,'warn',nm+' '+(d+1)+'일: E 다음 날 D');
       runN=v==='N'?runN+1:0; if(runN===4)mark(r,d,'warn',nm+' '+(d+1)+'일: N 4일 연속');
       if(p==='N'&&v!=='N'&&blk>=2&&!WORK[v]&&d+1<n&&WORK[s.c[d+1]])mark(r,d+1,'err',nm+' '+(d+2)+'일: N '+blk+'개 뒤 off 1일 (2일 필요)');
+      if(d+1<n&&v==='N'&&s.g[d]&&s.c[d+1]&&!s.g[d+1]&&!WORK[s.c[d+1]])mark(r,d,'err',nm+' '+(d+1)+'일: 오프 신청일 전날 N');
       blk=runN;
       runW=WORK[v]?runW+1:0; if(runW===doc.maxRun&&!s.donly)mark(r,d,'err',nm+' '+(d+1)+'일: 근무 '+doc.maxRun+'일 연속 (off 없음)');
     }
@@ -391,7 +392,7 @@ function renderAll(){
   $('title').innerHTML=cur.y+'년 '+cur.m+'월<small>동신병원 응급실 간호사 근무표</small>';
   $('autoPanel').hidden=!can;
   if(can){
-    $('autoRules').textContent='매일 D '+doc.min.D+'명 · E '+doc.min.E+'명 · N '+doc.min.N+'명(점검 기준 값), 토요일·일요일·공휴일에는 MD 1명을 채웁니다. N은 3일까지 연속, N 1개 뒤 off 1일, N 2개 이상 연속 뒤 off 2일. 한 주(월~일)에 off 2개 이상(월초·월말의 4~6일짜리 토막 주는 1개). 근무는 '+(doc.maxRun-1)+'일 연속까지이고 그 뒤에는 반드시 off가 옵니다(D만 하는 사람은 평일 5일 근무라 예외). D·E·N 근무마다 charge가 1명 이상 들어갑니다. D만 하는 사람은 평일 D, 토·일·공휴일 off로 채웁니다. 전월 말 근무와 이어지는 부분은 계산하지 않습니다.';
+    $('autoRules').textContent='매일 D '+doc.min.D+'명 · E '+doc.min.E+'명 · N '+doc.min.N+'명(점검 기준 값), 토요일·일요일·공휴일에는 MD 1명을 채웁니다. N은 3일까지 연속, 오프 신청일 전날에는 N을 넣지 않음, N 1개 뒤 off 1일, N 2개 이상 연속 뒤 off 2일. 한 주(월~일)에 off 2개 이상(월초·월말의 4~6일짜리 토막 주는 1개). 근무는 '+(doc.maxRun-1)+'일 연속까지이고 그 뒤에는 반드시 off가 옵니다(D만 하는 사람은 평일 5일 근무라 예외). D·E·N 근무마다 charge가 1명 이상 들어갑니다. D만 하는 사람은 평일 D, 토·일·공휴일 off로 채웁니다. 전월 말 근무와 이어지는 부분은 계산하지 않습니다.';
     $('roles').innerHTML=doc.staff.map(function(s,r){return '<div class="role"><b>'+esc(s.name||('연번 '+(r+1)))+'</b><select id="grade-'+s.id+'" data-r="'+r+'" aria-label="charge 여부"><option value="C"'+(s.grade!=='A'?' selected':'')+'>charge</option><option value="A"'+(s.grade==='A'?' selected':'')+'>acting</option></select><label><input type="checkbox" id="donly-'+s.id+'" data-r="'+r+'"'+(s.donly?' checked':'')+'>D만</label></div>'}).join('');
   }
   $('palette').hidden=!can; $('add').hidden=!can; $('clearAll').hidden=!can; $('delMonth').hidden=!can; updateUndo();
@@ -564,6 +565,7 @@ function solveDraft(P){
   function bump(i,d,v,s){var c=cnt[i];if(v==='N'||v==='E'||v==='D'||v==='MD')c[v]+=s;if(!W[v]){c.off+=s;if(P.wk[d])c.wk+=s}}
   function rowCost(i){
     var row=G[i],c=0,runW=0,k=0;
+    for(var q=0;q<n-1;q++)if(row[q]==="N"&&!fixed[i][q]&&fixed[i][q+1]&&!W[row[q+1]]){c+=4*H;hardAcc++}
     P.weeks.forEach(function(wk){var off=0;for(var j=wk.a;j<=wk.b;j++)if(!W[row[j]])off++;if(off<wk.need){c+=H*(wk.need-off);hardAcc+=wk.need-off}});
     for(var d=0;d<n;d++){
       var v=row[d],w=W[v]?1:0,p=d?row[d-1]:'';
